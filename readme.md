@@ -2,9 +2,9 @@
 This an application inspired by the hyperledger fabric v0.6 marble trading tutorial. This application handles the scenario when 3 people want to trading away their marbles with the fact that their wish can only be satisfy when the 3 people exchange their marbles at the same time in a circular way, ie, the successful exchange of marbles could not happen within one single trade. All trading logic happens in chaincode @ hyperledger fabric v1.0.
 
 # Requirement 
-docker
-docker-compose
-npm 6+
+- docker
+- docker-compose
+- npm 6.x
 
 # Usage
 ## Start local hyperledger fabric network
