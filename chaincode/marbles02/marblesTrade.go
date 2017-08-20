@@ -161,12 +161,12 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	} else if function == "openTrade" { //open a new marble trade
 		return t.openTrade(stub, args)
 	} else if function == "readOpenTrade" { //read marble trades
-		return t.openTrade(stub, args)
+		return t.readOpenTrade(stub, args)
 	} else if function == "removeOpenTrade" { //remove marble trade
 		return t.removeOpenTrade(stub, args)
-	} else if function == "swapMarble" { //open a new marble trade
+	} else if function == "swapMarble" { // swap two marbles between owner
 		return t.swapMarble(stub, args)
-	} else if function == "matchTrade" { //open a new marble trade
+	} else if function == "matchTrade" { // match the open trades
 		return t.matchTrade(stub, args)
 	}
 	fmt.Println("invoke did not find func: " + function) //error
@@ -902,6 +902,7 @@ func (t *SimpleChaincode) matchTrade(stub shim.ChaincodeStubInterface, args []st
 	for index, element := range openTrades.OpenTrades{
 		fmt.Println(element)
 		fmt.Println(index)
+
 	}
 
 
