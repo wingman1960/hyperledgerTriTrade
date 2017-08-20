@@ -1,0 +1,2 @@
+# Description
+This an application inspired by the hyperledger 0.6 marble trading tutorial. This application handles the scenario when 3 people want to trading away their marbles with the fact that their wish can only be satisfy when the 3 people exchange their marbles at the same time in a circular way, ie, the successful exchange of marbles could not happen within one single trade. All trading logic happens in chaincode.
