@@ -81,6 +81,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	// "reflect"
 	
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
@@ -105,11 +106,12 @@ type Description struct{
 
 type AnOpenTrade struct{
 	User string `json:"user"`					//user who created the open trade order
+	Timestamp int64 `json:"timestamp"`	
 	Want Description  `json:"want"`				//description of desired marble
 	Willing Description `json:"willing"`		//marbles willing to trade away
 }
 
-type AllTrades struct{
+type AllOpenTrades struct{
 	OpenTrades []AnOpenTrade `json:"open_trades"`
 }
 
@@ -158,8 +160,14 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		return t.getMarblesByRange(stub, args)
 	} else if function == "openTrade" { //open a new marble trade
 		return t.openTrade(stub, args)
-	} else if function == "readOpenTrade" { //open a new marble trade
+	} else if function == "readOpenTrade" { //read marble trades
 		return t.openTrade(stub, args)
+	} else if function == "removeOpenTrade" { //remove marble trade
+		return t.removeOpenTrade(stub, args)
+	} else if function == "swapMarble" { //open a new marble trade
+		return t.swapMarble(stub, args)
+	} else if function == "matchTrade" { //open a new marble trade
+		return t.matchTrade(stub, args)
 	}
 	fmt.Println("invoke did not find func: " + function) //error
 	return shim.Error("Received unknown function invocation")
@@ -659,6 +667,7 @@ func (t *SimpleChaincode) openTrade(stub shim.ChaincodeStubInterface, args []str
 		size2, err := strconv.Atoi(args[4])
 		
 		open := AnOpenTrade{}
+		open.Timestamp = makeTimestamp()
 		open.User = args[0]
 		open.Want.Color = args[1]
 		open.Want.Size =  size1
@@ -670,7 +679,7 @@ func (t *SimpleChaincode) openTrade(stub shim.ChaincodeStubInterface, args []str
 		if err != nil {
 			return shim.Error(err.Error())
 		}
-		var trades AllTrades
+		var trades AllOpenTrades
 		json.Unmarshal(tradesAsBytes, &trades)
 
 		fmt.Printf("- Finished getting current open trades \n")
@@ -687,33 +696,215 @@ func (t *SimpleChaincode) openTrade(stub shim.ChaincodeStubInterface, args []str
 		return shim.Success(nil)
 	}
 
+// ============================================================================================================================
+// makeTimestamp - create a timestamp in ms
+// ============================================================================================================================
+func makeTimestamp() int64 {
+    return time.Now().UnixNano() / (int64(time.Millisecond)/int64(time.Nanosecond))
+}	
+
 // ===============================================
-// readMarble - read a marble from chaincode state
+// readOpenTrade - read a readOpenTrade from chaincode state
 // ===============================================
 func (t *SimpleChaincode) readOpenTrade(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-	var name, jsonResp string
-	var err error
+	var jsonResp string
 
-	if len(args) != 1 {
-		return shim.Error("Incorrect number of arguments. Expecting name of the marble to query")
-	}
-
-	name = args[0]
-	valAsbytes, err := stub.GetState(openTradesStr) //get the marble from chaincode state
+	valAsbytes, err := stub.GetState(openTradesStr) //get the openTrades from chaincode state
 	if err != nil {
-		jsonResp = "{\"Error\":\"Failed to get state for " + name + "\"}"
+		jsonResp = "{\"Error\":\"Failed to get state for " + openTradesStr + "\"}"
 		return shim.Error(jsonResp)
 	} else if valAsbytes == nil {
-		jsonResp = "{\"Error\":\"Marble does not exist: " + name + "\"}"
+		jsonResp = "{\"Error\":\"Marble does not exist: " + openTradesStr + "\"}"
 		return shim.Error(jsonResp)
 	}
 	
-	var trades AllTrades
+	var trades AllOpenTrades
 	json.Unmarshal(valAsbytes, &trades)
 	fmt.Print(trades)
 	return shim.Success(valAsbytes)
 }
 
+// ===============================================
+// removeOpenTrade - removeOpenTrade from chaincode state
+// ===============================================
+func (t *SimpleChaincode) removeOpenTrade(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 
-// func (t *SimpleChaincode) tradeMarble (stub shim.ChaincodeStubInterface, args []string) pb.Response {
-// }
+	if len(args) != 1 {
+		return shim.Error("Incorrect number of arguments. Expecting timestamp of the open trade")
+	}
+
+	fmt.Println("- start remove trade")
+	timestamp, err := strconv.ParseInt(args[0], 10, 64)
+	if err != nil {
+		return shim.Error("1st argument must be a numeric string")
+	}
+
+	//get the open trade struct
+	tradesAsBytes, err := stub.GetState(openTradesStr)
+	if err != nil {
+		return shim.Error("Failed to get opentrades")
+	}
+	var trades AllOpenTrades
+	json.Unmarshal(tradesAsBytes, &trades)		
+
+	for i := range trades.OpenTrades{																	//look for the trade
+		//fmt.Println("looking at " + strconv.FormatInt(trades.OpenTrades[i].Timestamp, 10) + " for " + strconv.FormatInt(timestamp, 10))
+		if trades.OpenTrades[i].Timestamp == timestamp{
+			fmt.Println("found the trade");
+			trades.OpenTrades = append(trades.OpenTrades[:i], trades.OpenTrades[i+1:]...)				//remove this trade
+			tradesAsBytes, _ := json.Marshal(trades)
+			err = stub.PutState(openTradesStr, tradesAsBytes)												//rewrite open orders
+			if err != nil {
+				return shim.Error(err.Error())
+			}
+			break
+		}
+	}
+	
+	fmt.Println("- end remove trade")
+	fmt.Print(trades)
+	return shim.Success(nil)
+}
+
+
+func getQueryResultForQueryStringtoMap(stub shim.ChaincodeStubInterface, queryString string) (map[string]interface{}, error) {
+		marbles := make(map[string]interface{})
+		
+		fmt.Printf("- getQueryResultForQueryStringtoMap queryString:\n%s\n", queryString)
+	
+		resultsIterator, err := stub.GetQueryResult(queryString)
+		if err != nil {
+			return nil, err
+		}
+		defer resultsIterator.Close()
+	
+		// buffer is a JSON array containing QueryRecords
+		var buffer bytes.Buffer
+		buffer.WriteString("[")
+
+		for resultsIterator.HasNext() {
+			queryResponse, err := resultsIterator.Next()
+			if err != nil {
+				return nil, err
+			}
+			// Record is a JSON object, so we write as-is
+			var data map[string]interface{}
+			err = json.Unmarshal([]byte(queryResponse.Value), &data)
+			fmt.Println(data)
+			marbles[queryResponse.Key] = data
+			// marbles[queryResponse.Key] = string(queryResponse.Value)
+		}
+		
+		fmt.Printf("- getQueryResultForQueryStringtoMap queryResult:\n%s\n", marbles)
+		return marbles, nil
+	}
+
+// ===============================================
+// swapMarble - swap marble between two owners base on color and size ( without knowing marbleName)
+// ===============================================
+
+func (t *SimpleChaincode) swapMarble(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+
+	//args = owner1, color1, size1, owner2, color2, size2 
+
+	var owner1 = args[0]
+	var color1 = args[1]
+	// var size1 = args[2]
+	var owner2 = args[3]
+	var color2 = args[4]
+	// var size2 = args[5]
+
+	if len(args) != 6 {
+		return shim.Error("Incorrect number of arguments. Expecting 6 args")
+	}
+
+	queryString1 := fmt.Sprintf("{\"selector\":{\"docType\":\"marble\",\"owner\":\"%s\"}}", owner1)
+	
+	queryString2 := fmt.Sprintf("{\"selector\":{\"docType\":\"marble\",\"owner\":\"%s\"}}", owner2)
+	
+	queryResults1, err := getQueryResultForQueryStringtoMap(stub, queryString1)
+	queryResults2, err := getQueryResultForQueryStringtoMap(stub, queryString2)
+	fmt.Printf("- swapMarble queryResults1:\n%s\n", queryResults1)
+	fmt.Println(queryResults1)
+	fmt.Println(queryResults2)
+
+	marble1Name := ""
+	marble2Name := ""
+	for k, v := range queryResults1 {
+		innermap, ok := v.(map[string]interface{})
+
+		if !ok {
+			panic("inner map is not a map!")
+		}
+		if innermap["color"] == color1 {
+			fmt.Println("marble1 bingo............")
+			marble1Name = k
+	
+		}
+		fmt.Printf("key[%s] value[%s]\n", k, innermap)
+	}
+
+	for k, v := range queryResults2 {
+		innermap, ok := v.(map[string]interface{})
+
+		if !ok {
+			panic("inner map is not a map!")
+		}
+		if innermap["color"] == color2 {
+			fmt.Println("marble2 bingo............")
+			marble2Name = k
+		}
+		fmt.Printf("key[%s] value[%s]\n", k, innermap)
+	}
+
+	if (marble1Name != "")  && (marble2Name != "") {
+		fmt.Println("- swapMarble : start swapping marbles")
+
+		response := t.transferMarble(stub, []string{marble1Name, owner2})
+
+		// if the transfer failed break out of loop and return error
+		if response.Status != shim.OK {
+			return shim.Error("Transfer failed: " + response.Message)
+		}
+		response = t.transferMarble(stub, []string{marble2Name, owner1})
+		// if the transfer failed break out of loop and return error
+		if response.Status != shim.OK {
+			return shim.Error("Transfer failed: " + response.Message)
+		}
+		fmt.Println("- swapMarble : finished swapping marbles")
+	}
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+	return shim.Success([]byte("success"))
+
+}
+
+// ===============================================
+// matchTrade - matchTrade from within openTrades in chaincode state
+// ===============================================
+
+func (t *SimpleChaincode) matchTrade(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+	var jsonResp string
+	fmt.Println("afasf")
+	valAsbytes, err := stub.GetState(openTradesStr) //get the marble from chaincode state
+	if err != nil {
+		jsonResp = "{\"Error\":\"Failed to get state for " + openTradesStr + "\"}"
+		return shim.Error(jsonResp)
+	} else if valAsbytes == nil {
+		jsonResp = "{\"Error\":\"Marble does not exist: " + openTradesStr + "\"}"
+		return shim.Error(jsonResp)
+	}
+	
+	var openTrades AllOpenTrades
+	json.Unmarshal(valAsbytes, &openTrades)
+	fmt.Print(openTrades.OpenTrades)
+	for index, element := range openTrades.OpenTrades{
+		fmt.Println(element)
+		fmt.Println(index)
+	}
+
+
+	return shim.Success(nil)
+
+}
