@@ -1,0 +1,5 @@
+/*styles for home content only*/
+html, body, div{
+    height: 100%;
+    font-family: Arial, Helvetica, sans-serif
+  }

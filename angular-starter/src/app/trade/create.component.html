@@ -1,0 +1,56 @@
+<div>
+  <h1 x-large class="sample-content">Let's Trade Marbles/ Assets here</h1>
+
+
+  <div>
+    <h4>Create Open Trades</h4>
+    
+    <form (ngSubmit)="postNewTrade()" autocomplete="off" >
+
+      <input
+        [value]="openTradeInputState.tradeOwner"
+        (input)="openTradeInputState.tradeOwner = $event.target.value"
+        placeholder="Trade Asker"
+        autofocus>
+      
+      <input class="dropdown-menu"
+        [value]="openTradeInputState.wantColor"
+        (input)="openTradeInputState.wantColor = $event.target.value"
+        placeholder="Marble Color- Want"
+        autofocus>
+      <input class="dropdown-menu"
+        [value]="openTradeInputState.wantSize"
+        (input)="openTradeInputState.wantSize = $event.target.value"
+        placeholder="Marble Size- Want"
+        autofocus>
+        
+        <input
+          [value]="openTradeInputState.willingColor"
+          (input)="openTradeInputState.willingColor = $event.target.value"
+          placeholder="Marble Color- Trade Away"
+          autofocus>
+
+      <input
+        [value]="openTradeInputState.willingSize"
+        (input)="openTradeInputState.willingSize = $event.target.value"
+        placeholder="Marble Size- Trade Away"
+        autofocus>
+      <button>Open a Trade at Hyperledger</button>
+    </form>
+
+      <form (ngSubmit)="getOpenTradesStates()" autocomplete="off" >
+        <button type="submit" >Get All Open Trades</button>
+      </form>
+      <form (ngSubmit)="clearAllOpenTrades()" autocomplete="off" >
+        <button type="submit" >Clear All Trades</button>
+      </form> 
+      <form (ngSubmit)="matchTrades()" autocomplete="off" >
+        <button type="submit" >Match Trades in Pair</button>
+      </form>      
+      <form (ngSubmit)="matchTriTrades()" autocomplete="off" >
+        <button type="submit" >Match Trade in Triangular</button>
+      </form>      
+      <ng2-smart-table [settings]="settingsTable" [source]="dataTable"></ng2-smart-table>
+  </div>
+
+</div>

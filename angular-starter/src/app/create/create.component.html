@@ -1,0 +1,50 @@
+<div>
+  <h1 x-large class="sample-content">Lets Create Marbles/ Assets here</h1>
+
+
+  <div>
+    <h4>Create Marble</h4>
+    
+    <form (ngSubmit)="postNewMarble()" autocomplete="off" >
+
+      <input
+        [value]="marbleInputState.marbleOwner"
+        (input)="marbleInputState.marbleOwner = $event.target.value"
+        placeholder="marble Owner"
+        autofocus>
+      
+      <input class="dropdown-menu"
+        [value]="marbleInputState.marbleName"
+        (input)="marbleInputState.marbleName = $event.target.value"
+        placeholder="marble Name"
+        autofocus>
+        
+        <input
+          [value]="marbleInputState.marbleColor"
+          (input)="marbleInputState.marbleColor = $event.target.value"
+          placeholder="marble Color"
+          autofocus>
+
+      <input
+        [value]="marbleInputState.marbleSize"
+        (input)="marbleInputState.marbleSize = $event.target.value"
+        placeholder="marble Size"
+        autofocus>
+      <button>Make Marble at Hyperledger</button>
+    </form>
+    <!--
+        <input type="text" [value]="marbleInputState.value" (input)="marbleInputState.value = $event.target.value" autofocus>
+        Rather than wiring up two-way data-binding ourselves with [value] and (input)
+        we can use Angular's [(ngModel)] syntax
+        <input type="text" name="textInput" [(ngModel)]="marbleInputState.value" autofocus>
+      -->
+
+      <!-- <pre>this.marbleInputState = {{ marbleInputState | json }}</pre>
+      <pre>this.assetsStates = {{ assetsStates | json }}</pre> -->
+      <form (ngSubmit)="getAssetsStates(marbleInputState.marbleOwner)" autocomplete="off" >
+      <button type="submit" >Get Owner's Marbles Status</button>
+      </form>
+      <ng2-smart-table [settings]="settingsTable" [source]="dataTable"></ng2-smart-table>
+  </div>
+
+</div>

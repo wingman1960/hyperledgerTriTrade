@@ -14,4 +14,4 @@ first-network/channel-artifacts/*.block
 first-network/crypto-config/*
 
 # node modules
-myapp/node_modules/
+serverExpressjs/node_modules/
