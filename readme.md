@@ -1,6 +1,7 @@
 # Description
-This an application inspired by the hyperledger fabric v0.6 marble trading tutorial. This application handles the scenario when 3 people want to trading away their marbles with the fact that their wish can only be satisfy when the 3 people exchange their marbles at the same time in a circular way, ie, the successful exchange of marbles could not happen within one single trade. All trading logic happens in chaincode @ hyperledger fabric v1.0.
-
+This an application inspired by the hyperledger fabric v0.6 marble trading tutorial. This application handles the scenario when 3 people want to trading away their marbles with the fact that their wish can only be satisfy when the 3 people exchange their marbles at the same time in a circular way, ie, the successful exchange of marbles could not happen within one single trade. All trading logic happens in chaincode @ hyperledger fabric v1.0. 
+## Future application:
+This will greatly increase the liquidity of one asset, without limitaion to only digital currency, provided that there is a mechanism binding that physical asset into its digital representation
 # Requirement 
 - docker
 - docker-compose
@@ -46,3 +47,7 @@ remove marble trade
 swap two marbles between owner depending on input color
 ### matchTrade(stub, args)
 match the open trades
+
+
+# Limitation
+Currently the id of each AnOpenTrade is identified by timestamp generated on nodes. This post the the difficult of consistant timestamp across each node. The current solution is to round off the timestamp to nearest second so as to decrease the posibility of inconsistancy as compare to rounding off to miniSecond.
