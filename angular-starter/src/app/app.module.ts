@@ -25,8 +25,6 @@ import { AppComponent } from './app.component';
 import { APP_RESOLVER_PROVIDERS } from './app.resolver';
 import { AppState, InternalStateType } from './app.service';
 import { HomeComponent } from './home';
-import { AboutComponent } from './about';
-import { AboutComponent2 } from './about2';
 import { CreateComponent } from './create';
 import { TradeComponent } from './trade';
 import { NoContentComponent } from './no-content';
@@ -56,8 +54,6 @@ type StoreType = {
   bootstrap: [ AppComponent ],
   declarations: [
     AppComponent,
-    AboutComponent,
-    AboutComponent2,
     CreateComponent,
     TradeComponent,
     HomeComponent,
