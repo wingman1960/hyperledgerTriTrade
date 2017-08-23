@@ -925,10 +925,10 @@ func (t *SimpleChaincode) swapMarble(stub shim.ChaincodeStubInterface, args []st
 
 	var owner1 = args[0]
 	var color1 = args[1]
-	var size1 = args[2]
+	// var size1 = args[2]
 	var owner2 = args[3]
 	var color2 = args[4]
-	var size2 = args[5]
+	// var size2 = args[5]
 
 	if len(args) != 6 {
 		return shim.Error("Incorrect number of arguments. Expecting 6 args")
@@ -952,7 +952,7 @@ func (t *SimpleChaincode) swapMarble(stub shim.ChaincodeStubInterface, args []st
 		if !ok {
 			panic("inner map is not a map!")
 		}
-		if (innermap["color"] == color1) && (innermap["size"] == size1){
+		if (innermap["color"] == color1) {
 			fmt.Println("marble1 bingo............")
 			marble1Name = k
 	
@@ -966,7 +966,7 @@ func (t *SimpleChaincode) swapMarble(stub shim.ChaincodeStubInterface, args []st
 		if !ok {
 			panic("inner map is not a map!")
 		}
-		if (innermap["color"] == color2) && (innermap["size"] == size2){
+		if (innermap["color"] == color2) {
 			fmt.Println("marble2 bingo............")
 			marble2Name = k
 		}
@@ -995,6 +995,112 @@ func (t *SimpleChaincode) swapMarble(stub shim.ChaincodeStubInterface, args []st
 	return shim.Success([]byte("success"))
 
 }
+
+// ===============================================
+// swapMarbleTri - swap marble between two owners base on color and size ( without knowing marbleName)
+// ===============================================
+
+func (t *SimpleChaincode) swapMarbleTri(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+	
+		//args = owner1, color1, size1, owner2, color2, size2 
+	
+		var owner1 = args[0]
+		var color1 = args[1]
+		// var size1 = args[2]
+		var owner2 = args[3]
+		var color2 = args[4]
+		// var size2 = args[5]
+		var owner3 = args[6]
+		var color3 = args[7]
+		// var size3 = args[8]
+
+	
+		if len(args) != 9 {
+			return shim.Error("Incorrect number of arguments. Expecting 9 args")
+		}
+	
+		queryString1 := fmt.Sprintf("{\"selector\":{\"docType\":\"marble\",\"owner\":\"%s\"}}", owner1)
+		
+		queryString2 := fmt.Sprintf("{\"selector\":{\"docType\":\"marble\",\"owner\":\"%s\"}}", owner2)
+
+		queryString3 := fmt.Sprintf("{\"selector\":{\"docType\":\"marble\",\"owner\":\"%s\"}}", owner3)
+		
+		queryResults1, err := getQueryResultForQueryStringtoMap(stub, queryString1)
+		queryResults2, err := getQueryResultForQueryStringtoMap(stub, queryString2)
+		queryResults3, err := getQueryResultForQueryStringtoMap(stub, queryString3)
+		fmt.Printf("- swapMarble queryResults1:\n%s\n", queryResults1)
+		fmt.Printf("- swapMarble queryResults2:\n%s\n", queryResults2)
+		fmt.Printf("- swapMarble queryResults3:\n%s\n", queryResults3)
+		marble1Name := ""
+		marble2Name := ""
+		marble3Name := ""
+		for k, v := range queryResults1 {
+			innermap, ok := v.(map[string]interface{})
+	
+			if !ok {
+				panic("inner map is not a map!")
+			}
+			if (innermap["color"] == color1) {
+				fmt.Println("marble1 bingo............")
+				marble1Name = k
+		
+			}
+			fmt.Printf("key[%s] value[%s]\n", k, innermap)
+		}
+	
+		for k, v := range queryResults2 {
+			innermap, ok := v.(map[string]interface{})
+	
+			if !ok {
+				panic("inner map is not a map!")
+			}
+			if (innermap["color"] == color2) {
+				fmt.Println("marble2 bingo............")
+				marble2Name = k
+			}
+			fmt.Printf("key[%s] value[%s]\n", k, innermap)
+		}
+		
+		for k, v := range queryResults3 {
+			innermap, ok := v.(map[string]interface{})
+	
+			if !ok {
+				panic("inner map is not a map!")
+			}
+			if (innermap["color"] == color3) {
+				fmt.Println("marble3 bingo............")
+				marble3Name = k
+			}
+			fmt.Printf("key[%s] value[%s]\n", k, innermap)
+		}
+
+		if (marble1Name != "")  && (marble2Name != "")  && (marble3Name != ""){
+			fmt.Println("- swapMarbleTri : start swapping marbles Tri")
+	
+			response := t.transferMarble(stub, []string{marble1Name, owner2})
+	
+			// if the transfer failed break out of loop and return error
+			if response.Status != shim.OK {
+				return shim.Error("Transfer failed: " + response.Message)
+			}
+			response = t.transferMarble(stub, []string{marble2Name, owner3})
+			// if the transfer failed break out of loop and return error
+			if response.Status != shim.OK {
+				return shim.Error("Transfer failed: " + response.Message)
+			}
+			response = t.transferMarble(stub, []string{marble3Name, owner1})
+			// if the transfer failed break out of loop and return error
+			if response.Status != shim.OK {
+				return shim.Error("Transfer failed: " + response.Message)
+			}
+			fmt.Println("- swapMarble : finished swapping marbles")
+		}
+		if err != nil {
+			return shim.Error(err.Error())
+		}
+		return shim.Success([]byte("success"))
+	
+	}
 
 // ===============================================
 // matchTrade - match trades from within openTrades in chaincode state, compatibale with AnOpenTrade as slice in AllOpenTrades
@@ -1161,11 +1267,29 @@ func (t *SimpleChaincode) matchTriTrade(stub shim.ChaincodeStubInterface, args [
 				(reflect.DeepEqual(openTrades[i].Want, openTrades[k].Willing) && reflect.DeepEqual(openTrades[k].Want, openTrades[j].Willing) && reflect.DeepEqual(openTrades[j].Want, openTrades[i].Willing)){
 					fmt.Println("matchTriTrade - swapMarbles")
 					// swapMarbles
-					
-					t.swapMarble(stub, []string{openTrades[i].User, openTrades[i].Willing.Color, strconv.Itoa(openTrades[i].Willing.Size), openTrades[j].User, openTrades[j].Willing.Color, strconv.Itoa(openTrades[j].Willing.Size)})
-					t.swapMarble(stub, []string{openTrades[j].User, openTrades[j].Willing.Color, strconv.Itoa(openTrades[j].Willing.Size), openTrades[k].User, openTrades[k].Willing.Color, strconv.Itoa(openTrades[k].Willing.Size)})
-					fmt.Println(i)
-					fmt.Println(openTrades[i])
+					if (reflect.DeepEqual(openTrades[i].Want, openTrades[j].Willing) && reflect.DeepEqual(openTrades[j].Want, openTrades[k].Willing) && reflect.DeepEqual(openTrades[k].Want, openTrades[i].Willing)){
+						fmt.Println("matchTriTrade - first case - swapMarbleTri")
+						t.swapMarbleTri(stub, []string{openTrades[i].User, openTrades[i].Willing.Color, strconv.Itoa(openTrades[i].Willing.Size), openTrades[j].User, openTrades[j].Willing.Color, strconv.Itoa(openTrades[j].Willing.Size), openTrades[k].User, openTrades[k].Willing.Color, strconv.Itoa(openTrades[k].Willing.Size)})
+						// following doesnt work......
+						// t.swapMarble(stub, []string{openTrades[i].User, openTrades[i].Willing.Color, strconv.Itoa(openTrades[i].Willing.Size), openTrades[j].User, openTrades[j].Willing.Color, strconv.Itoa(openTrades[j].Willing.Size)})
+						// t.swapMarble(stub, []string{openTrades[j].User, openTrades[i].Willing.Color, strconv.Itoa(openTrades[i].Willing.Size), openTrades[k].User, openTrades[k].Willing.Color, strconv.Itoa(openTrades[k].Willing.Size)})
+						// fmt.Println(openTrades[i])
+						
+					}else {
+						fmt.Println("matchTriTrade - second case - swapMarbleTri")
+						t.swapMarbleTri(stub, []string{openTrades[i].User, openTrades[i].Willing.Color, strconv.Itoa(openTrades[i].Willing.Size), openTrades[k].User, openTrades[k].Willing.Color, strconv.Itoa(openTrades[k].Willing.Size), openTrades[j].User, openTrades[j].Willing.Color, strconv.Itoa(openTrades[j].Willing.Size)})
+						
+						// fmt.Println("matchTriTrade - second case - step 1")
+						// t.swapMarble(stub, []string{openTrades[i].User, openTrades[i].Willing.Color, strconv.Itoa(openTrades[i].Willing.Size), openTrades[k].User, openTrades[k].Willing.Color, strconv.Itoa(openTrades[k].Willing.Size)})
+						// fmt.Println("matchTriTrade - second case - step 2")
+						// fmt.Println(openTrades[k].User)
+						// fmt.Println(openTrades[k].Willing.Color)
+						// fmt.Println(openTrades[i].User)
+						// fmt.Println(openTrades[i].Willing.Color)
+						// time.Sleep(2000 * time.Millisecond)
+						// t.swapMarble(stub, []string{openTrades[k].User, openTrades[i].Willing.Color, strconv.Itoa(openTrades[i].Willing.Size), openTrades[j].User, openTrades[j].Willing.Color, strconv.Itoa(openTrades[j].Willing.Size)})
+						// fmt.Println(openTrades[i])
+					}
 					// delete openTrades after matching orders
 					// delete from hyperledger blockchain
 					// t.removeOpenTrade(stub,[]string{strconv.FormatInt(openTrades[i].Timestamp, 10)})

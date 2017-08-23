@@ -62,11 +62,11 @@ export class CreateComponent implements OnInit {
   public settingsTable = {
             actions: false,
             columns: {
-              marbleName: {
-                title: 'marble Name'
-              },
               marbleOwner: {
                 title: 'marble Owner'
+              },
+              marbleName: {
+                title: 'marble Name'
               },
               marbleColor: {
                 title: 'marble Color'
