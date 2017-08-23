@@ -171,6 +171,8 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		return t.removeOpenTrade(stub, args)
 	} else if function == "swapMarble" { // swap two marbles between owner
 		return t.swapMarble(stub, args)
+	} else if function == "swapMarbleTri" { // swap two marbles between owner
+		return t.swapMarbleTri(stub, args)
 	} else if function == "matchTrade" { // match the open trades
 		return t.matchTrade(stub, args)
 	} else if function == "matchTrade2" { // match the open trades

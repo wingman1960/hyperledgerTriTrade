@@ -63,7 +63,7 @@ export class CreateComponent implements OnInit {
             actions: false,
             columns: {
               marbleOwner: {
-                title: 'marble Owner'
+                title: 'marble Owner',
               },
               marbleName: {
                 title: 'marble Name'

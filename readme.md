@@ -13,11 +13,20 @@ This will greatly increase the liquidity of one asset, without limitaion to only
 cd myapp
 ./startFabric
 ```
-## Start Node server
+## Start Node server (Expressjs)
 ```
+cd serverExpressjs
 npm install
 node app.js
 ```
+
+## Start node client (Angular2)
+```
+cd clientAngular2
+npm install
+node start
+```
+
 # Chaincode interface
 ### initMarble(stub, args)
 create a new marble
@@ -46,8 +55,10 @@ remove marble trade
 ### swapMarble(stub, args)
 swap two marbles between owner depending on input color
 ### matchTrade(stub, args)
-match the open trades
-
-
+match the open trades in pair
+### matchTriTrade(stub, args)
+match the open trades in Triangle
+### clearOpenTrades(stub, args)
+clear all open trades
 # Limitation
 Currently the id of each AnOpenTrade is identified by timestamp generated on nodes. This post the the difficult of consistant timestamp across each node. The current solution is to round off the timestamp to nearest second so as to decrease the posibility of inconsistancy as compare to rounding off to miniSecond.
