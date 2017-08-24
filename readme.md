@@ -10,7 +10,6 @@ This will greatly increase the liquidity of one asset, without limitaion to only
 # Usage
 ## Start local hyperledger fabric network
 ```
-cd myapp
 ./startFabric
 ```
 ## Start Node server (Expressjs)
@@ -24,7 +23,7 @@ node app.js
 ```
 cd clientAngular2
 npm install
-node start
+npm start
 ```
 
 # Chaincode interface
